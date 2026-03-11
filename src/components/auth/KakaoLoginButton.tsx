@@ -1,8 +1,18 @@
 'use client';
 
+const KAKAO_CLIENT_ID = process.env.NEXT_PUBLIC_KAKAO_CLIENT_ID || '';
+const KAKAO_REDIRECT_URI = typeof window !== 'undefined'
+  ? `${window.location.origin}/auth/kakao/callback`
+  : 'http://localhost:3000/auth/kakao/callback';
+
 export default function KakaoLoginButton() {
   const handleKakaoLogin = () => {
-    const kakaoAuthUrl = `/api/auth/kakao/authorize`;
+    if (!KAKAO_CLIENT_ID) {
+      alert('카카오 로그인 설정이 필요합니다. (NEXT_PUBLIC_KAKAO_CLIENT_ID)');
+      return;
+    }
+    const kakaoAuthUrl =
+      `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_CLIENT_ID}&redirect_uri=${encodeURIComponent(KAKAO_REDIRECT_URI)}&response_type=code`;
     window.location.href = kakaoAuthUrl;
   };
 
