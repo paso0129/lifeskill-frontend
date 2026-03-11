@@ -11,6 +11,19 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        primary: {
+          DEFAULT: "#0EA5E9",
+          dark: "#0369A1",
+          light: "#E0F2FE",
+        },
+        secondary: "#1E3A5F",
+        accent: {
+          DEFAULT: "#F59E0B",
+          dark: "#D97706",
+        },
+      },
+      fontFamily: {
+        pretendard: ["Pretendard", "sans-serif"],
       },
     },
   },

@@ -1,0 +1,56 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import Header from '@/components/common/Header';
+import ActivityCard from '@/components/exercise/ActivityCard';
+import api from '@/lib/api';
+import { Activity } from '@/types/exercise';
+
+export default function FitnessActivitiesPage() {
+  const router = useRouter();
+  const params = useParams();
+  const gradeId = params.grade as string;
+  const unitId = params.unit as string;
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await api.get(`/api/units/${unitId}/categories/FITNESS/activities`);
+        setActivities(res.data);
+      } catch {
+        // fallback
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    load();
+  }, [unitId]);
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <Header title="건강체력 활동" />
+      <div className="max-w-lg mx-auto px-4 py-6">
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+          </div>
+        ) : activities.length === 0 ? (
+          <p className="text-center text-slate-500 py-12">등록된 활동이 없습니다.</p>
+        ) : (
+          <div className="space-y-3">
+            {activities.map((activity) => (
+              <ActivityCard
+                key={activity.id}
+                activity={activity}
+                onClick={() => router.push(`/exercise/${gradeId}/${unitId}/fitness/${activity.id}`)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
