@@ -49,9 +49,11 @@ const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       const res = await api.post('/api/auth/login', { username, password });
-      const { token, user } = res.data;
+      const { token } = res.data;
       setToken(token);
-      set({ user, token, isAuthenticated: true, isLoading: false });
+      set({ token, isAuthenticated: true, isLoading: false });
+      const userRes = await api.get('/api/users/me');
+      set({ user: userRes.data });
     } catch (error) {
       set({ isLoading: false });
       throw error;
@@ -62,9 +64,12 @@ const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       const res = await api.post('/api/auth/signup', data);
-      const { token, user } = res.data;
+      const { token } = res.data;
       setToken(token);
-      set({ user, token, isAuthenticated: true, isLoading: false });
+      set({ token, isAuthenticated: true, isLoading: false });
+      // checkAuth로 유저 정보 로드
+      const userRes = await api.get('/api/users/me');
+      set({ user: userRes.data });
     } catch (error) {
       set({ isLoading: false });
       throw error;
@@ -88,7 +93,7 @@ const useAuthStore = create<AuthState>((set) => ({
     }
     set({ isLoading: true });
     try {
-      const res = await api.get('/api/auth/me');
+      const res = await api.get('/api/users/me');
       set({ user: res.data, isAuthenticated: true, isLoading: false });
     } catch {
       removeToken();

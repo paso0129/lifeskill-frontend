@@ -34,8 +34,8 @@ export default function HomePage() {
           <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary-dark rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <Dumbbell className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">생활체육</h1>
-          <p className="text-slate-500 mt-1">초등 체육 활동 플랫폼</p>
+          <h1 className="text-2xl font-bold text-slate-800">라이프 스킬을 통한</h1>
+          <h1 className="text-2xl font-bold text-slate-800">피지컬 리터러시 기르기</h1>
         </div>
 
         {/* Welcome */}

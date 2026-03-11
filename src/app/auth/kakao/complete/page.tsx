@@ -1,10 +1,17 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import useAuthStore from '@/store/authStore';
 import Header from '@/components/common/Header';
 import Button from '@/components/common/Button';
+
+interface School {
+  name: string;
+  address: string;
+  region: string;
+  code: string;
+}
 
 export default function KakaoCompletePage() {
   const router = useRouter();
@@ -20,6 +27,51 @@ export default function KakaoCompletePage() {
     role: 'STUDENT' as 'STUDENT' | 'TEACHER',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // 학교 검색
+  const [schoolQuery, setSchoolQuery] = useState('');
+  const [schoolResults, setSchoolResults] = useState<School[]>([]);
+  const [showSchoolDropdown, setShowSchoolDropdown] = useState(false);
+  const [schoolSearching, setSchoolSearching] = useState(false);
+  const schoolRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (schoolQuery.length < 2) {
+      setSchoolResults([]);
+      setShowSchoolDropdown(false);
+      return;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      setSchoolSearching(true);
+      try {
+        const res = await fetch(`/api/schools?q=${encodeURIComponent(schoolQuery)}`);
+        const data = await res.json();
+        setSchoolResults(data);
+        setShowSchoolDropdown(data.length > 0);
+      } catch {
+        setSchoolResults([]);
+      } finally {
+        setSchoolSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [schoolQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (schoolRef.current && !schoolRef.current.contains(e.target as Node)) {
+        setShowSchoolDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -55,7 +107,7 @@ export default function KakaoCompletePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 pb-24">
       <Header title="추가 정보 입력" showBack={false} showProfile={false} />
       <div className="max-w-lg mx-auto px-4 py-6">
         <p className="text-sm text-slate-500 mb-6 text-center">
@@ -105,15 +157,49 @@ export default function KakaoCompletePage() {
             {errors.birthDate && <p className="text-xs text-red-500 mt-1">{errors.birthDate}</p>}
           </div>
 
-          <div>
+          {/* 학교 - 자동완성 */}
+          <div ref={schoolRef} className="relative">
             <label className="block text-sm font-medium text-slate-700 mb-1">학교</label>
             <input
               type="text"
-              value={form.school}
-              onChange={(e) => updateField('school', e.target.value)}
-              placeholder="학교명"
+              value={form.school || schoolQuery}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSchoolQuery(val);
+                if (form.school) updateField('school', '');
+              }}
+              onFocus={() => {
+                if (schoolResults.length > 0) setShowSchoolDropdown(true);
+              }}
+              placeholder="학교명 검색 (2글자 이상)"
               className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-slate-800"
             />
+            {schoolSearching && (
+              <div className="absolute right-3 top-[38px]">
+                <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            {form.school && (
+              <p className="text-xs text-green-600 mt-1">✓ {form.school}</p>
+            )}
+            {showSchoolDropdown && (
+              <ul className="absolute z-50 w-full bottom-full mb-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                {schoolResults.map((s) => (
+                  <li
+                    key={s.code}
+                    onClick={() => {
+                      updateField('school', s.name);
+                      setSchoolQuery(s.name);
+                      setShowSchoolDropdown(false);
+                    }}
+                    className="px-4 py-3 hover:bg-primary/10 cursor-pointer border-b border-slate-100 last:border-0"
+                  >
+                    <p className="text-sm font-medium text-slate-800">{s.name}</p>
+                    <p className="text-xs text-slate-500">{s.region} · {s.address}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
             {errors.school && <p className="text-xs text-red-500 mt-1">{errors.school}</p>}
           </div>
 

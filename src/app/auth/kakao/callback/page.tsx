@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect } from 'react';
+import { Suspense, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import useAuthStore from '@/store/authStore';
 
@@ -8,6 +8,7 @@ function KakaoCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { kakaoLogin } = useAuthStore();
+  const isProcessing = useRef(false);
 
   useEffect(() => {
     const code = searchParams.get('code');
@@ -15,6 +16,10 @@ function KakaoCallbackContent() {
       router.replace('/login');
       return;
     }
+
+    // 중복 호출 방지 (React StrictMode / 카카오 code는 1회용)
+    if (isProcessing.current) return;
+    isProcessing.current = true;
 
     const processLogin = async () => {
       try {
@@ -30,7 +35,7 @@ function KakaoCallbackContent() {
     };
 
     processLogin();
-  }, [searchParams, kakaoLogin, router]);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
