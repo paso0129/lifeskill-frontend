@@ -226,7 +226,7 @@ export default function KakaoCompletePage() {
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-slate-800 bg-white"
               >
                 <option value="">선택</option>
-                {Array.from({ length: 10 }, (_, i) => i + 1).map((c) => (
+                {Array.from({ length: 15 }, (_, i) => i + 1).map((c) => (
                   <option key={c} value={c}>{c}반</option>
                 ))}
               </select>
