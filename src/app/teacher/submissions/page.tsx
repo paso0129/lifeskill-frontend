@@ -15,7 +15,6 @@ export default function TeacherSubmissionsPage() {
   const [submissions, setSubmissions] = useState<Participation[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -53,7 +52,6 @@ export default function TeacherSubmissionsPage() {
       const res = await api.get<PageResponse<Participation>>('/api/teacher/participations', { params });
       setSubmissions(res.data.content);
       setTotalPages(res.data.totalPages);
-      setTotalElements(res.data.totalElements);
       setCurrentPage(res.data.number);
     } catch {
       // ignore
