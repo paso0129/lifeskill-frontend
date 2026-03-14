@@ -28,7 +28,13 @@ export default function ExercisePage() {
               <GradeCard
                 key={grade.id}
                 grade={grade}
-                onClick={() => router.push(`/exercise/${grade.id}`)}
+                onClick={() => {
+                  if (grade.name !== '6학년') {
+                    alert('아직 준비 중입니다.');
+                    return;
+                  }
+                  router.push(`/exercise/${grade.id}`);
+                }}
               />
             ))}
           </div>
