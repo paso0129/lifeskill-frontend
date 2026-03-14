@@ -20,6 +20,8 @@ export interface Participation {
   };
   fileUrl: string;
   reviewText: string;
+  exerciseCount: number | null;
+  exerciseSets: number | null;
   submittedAt: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
