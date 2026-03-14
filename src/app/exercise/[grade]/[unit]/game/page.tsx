@@ -1,14 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Header from '@/components/common/Header';
 import ActivityCard from '@/components/exercise/ActivityCard';
 import api from '@/lib/api';
 import { Activity } from '@/types/exercise';
 
 export default function GamePage() {
+  const router = useRouter();
   const params = useParams();
+  const gradeId = params.grade as string;
   const unitId = params.unit as string;
   const [activities, setActivities] = useState<Activity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +45,7 @@ export default function GamePage() {
               <ActivityCard
                 key={activity.id}
                 activity={activity}
-                onClick={() => {}}
+                onClick={() => router.push(`/exercise/${gradeId}/${unitId}/game/${activity.id}`)}
               />
             ))}
           </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Header from '@/components/common/Header';
-import ActivityCard from '@/components/exercise/ActivityCard';
+import FitnessActivityCard from '@/components/exercise/FitnessActivityCard';
 import api from '@/lib/api';
 import { Activity } from '@/types/exercise';
 
@@ -31,7 +31,7 @@ export default function FitnessActivitiesPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Header title="건강체력 활동" />
+      <Header title="체력 기르기" />
       <div className="max-w-lg mx-auto px-4 py-6">
         {isLoading ? (
           <div className="flex justify-center py-12">
@@ -40,12 +40,12 @@ export default function FitnessActivitiesPage() {
         ) : activities.length === 0 ? (
           <p className="text-center text-slate-500 py-12">등록된 활동이 없습니다.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {activities.map((activity) => (
-              <ActivityCard
+              <FitnessActivityCard
                 key={activity.id}
                 activity={activity}
-                onClick={() => router.push(`/exercise/${gradeId}/${unitId}/fitness/${activity.id}`)}
+                onStart={() => router.push(`/exercise/${gradeId}/${unitId}/fitness/${activity.id}`)}
               />
             ))}
           </div>

@@ -10,7 +10,7 @@ import FileUploader from '@/components/common/FileUploader';
 import Button from '@/components/common/Button';
 import api from '@/lib/api';
 
-export default function ClassDetailPage() {
+export default function AssessmentDetailPage() {
   const router = useRouter();
   const params = useParams();
   const activityId = Number(params.id);
@@ -52,7 +52,7 @@ export default function ClassDetailPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Header title="수업 활동" />
+      <Header title="평가" />
       <div className="max-w-lg mx-auto px-4 py-6">
         {isLoading || !currentActivity ? (
           <div className="flex justify-center py-12">
