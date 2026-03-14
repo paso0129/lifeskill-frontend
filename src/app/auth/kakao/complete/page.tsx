@@ -13,9 +13,22 @@ interface School {
   code: string;
 }
 
+function isUnder14(birthDate: string): boolean {
+  if (!birthDate) return false;
+  const birth = new Date(birthDate);
+  const today = new Date();
+  const age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  const dayDiff = today.getDate() - birth.getDate();
+  const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
+  return actualAge < 14;
+}
+
 export default function KakaoCompletePage() {
   const router = useRouter();
   const { completeKakaoProfile, isLoading } = useAuthStore();
+
+  const [step, setStep] = useState<'form' | 'guardian'>('form');
 
   const [form, setForm] = useState({
     name: '',
@@ -26,6 +39,14 @@ export default function KakaoCompletePage() {
     classNum: '',
     role: 'STUDENT' as 'STUDENT' | 'TEACHER',
   });
+
+  const [guardian, setGuardian] = useState({
+    name: '',
+    phone: '',
+    relationship: '',
+    agreed: false,
+  });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // 학교 검색
@@ -90,10 +111,37 @@ export default function KakaoCompletePage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const validateGuardian = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (!guardian.name) newErrors.guardianName = '보호자 이름을 입력하세요.';
+    if (!guardian.phone) newErrors.guardianPhone = '보호자 연락처를 입력하세요.';
+    if (!/^01[0-9]\d{7,8}$/.test(guardian.phone.replace(/-/g, ''))) {
+      newErrors.guardianPhone = '올바른 연락처를 입력하세요.';
+    }
+    if (!guardian.relationship) newErrors.guardianRelationship = '관계를 선택하세요.';
+    if (!guardian.agreed) newErrors.guardianAgreed = '보호자 동의가 필요합니다.';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleNext = (e: FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
+    if (form.role === 'STUDENT' && isUnder14(form.birthDate)) {
+      setStep('guardian');
+    } else {
+      doSubmit();
+    }
+  };
+
+  const handleGuardianSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!validateGuardian()) return;
+    doSubmit();
+  };
+
+  const doSubmit = async () => {
     try {
       await completeKakaoProfile({
         ...form,
@@ -103,8 +151,109 @@ export default function KakaoCompletePage() {
       router.replace('/');
     } catch {
       setErrors({ form: '프로필 저장에 실패했습니다.' });
+      setStep('form');
     }
   };
+
+  if (step === 'guardian') {
+    return (
+      <div className="min-h-screen bg-slate-50 pb-24">
+        <Header title="보호자 동의" showBack={false} showProfile={false} />
+        <div className="max-w-lg mx-auto px-4 py-6">
+          <form onSubmit={handleGuardianSubmit} className="space-y-5">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <p className="text-sm text-slate-500 mt-1">
+                만 14세 미만 학생의 안전한 회원가입을 위하여<br />
+                보호자(법정대리인)의 동의가 필요합니다.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">보호자 이름</label>
+              <input
+                type="text"
+                value={guardian.name}
+                onChange={(e) => setGuardian(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="보호자 이름"
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-slate-800"
+              />
+              {errors.guardianName && <p className="text-xs text-red-500 mt-1">{errors.guardianName}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">보호자 연락처</label>
+              <input
+                type="tel"
+                value={guardian.phone}
+                onChange={(e) => setGuardian(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="010-0000-0000"
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-slate-800"
+              />
+              {errors.guardianPhone && <p className="text-xs text-red-500 mt-1">{errors.guardianPhone}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">관계</label>
+              <select
+                value={guardian.relationship}
+                onChange={(e) => setGuardian(prev => ({ ...prev, relationship: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-slate-800 bg-white"
+              >
+                <option value="">선택</option>
+                <option value="부">부</option>
+                <option value="모">모</option>
+                <option value="조부">조부</option>
+                <option value="조모">조모</option>
+                <option value="기타">기타</option>
+              </select>
+              {errors.guardianRelationship && <p className="text-xs text-red-500 mt-1">{errors.guardianRelationship}</p>}
+            </div>
+
+            <div className="bg-slate-50 rounded-xl p-4 space-y-3 border border-slate-200">
+              <p className="text-sm font-medium text-slate-700">개인정보 수집 및 이용 동의</p>
+              <div className="text-xs text-slate-500 space-y-1">
+                <p>- 수집 항목: 학생 이름, 생년월일, 성별, 학교, 학년, 반</p>
+                <p>- 수집 목적: 체육 활동 참여 기록 및 관리</p>
+                <p>- 보유 기간: 회원 탈퇴 시까지</p>
+              </div>
+              <label className="flex items-start gap-2 cursor-pointer mt-2">
+                <input
+                  type="checkbox"
+                  checked={guardian.agreed}
+                  onChange={(e) => setGuardian(prev => ({ ...prev, agreed: e.target.checked }))}
+                  className="w-5 h-5 text-primary focus:ring-primary mt-0.5 rounded"
+                />
+                <span className="text-sm text-slate-700">
+                  위 내용을 확인하였으며, 보호자로서 본 학생의 회원가입에 동의합니다.
+                </span>
+              </label>
+              {errors.guardianAgreed && <p className="text-xs text-red-500 mt-1">{errors.guardianAgreed}</p>}
+            </div>
+
+            {errors.form && <p className="text-sm text-red-500 text-center">{errors.form}</p>}
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => { setStep('form'); setErrors({}); }}
+                className="flex-1 px-4 py-3 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+              >
+                이전
+              </button>
+              <Button variant="primary" fullWidth loading={isLoading} type="submit">
+                가입완료
+              </Button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
@@ -113,7 +262,7 @@ export default function KakaoCompletePage() {
         <p className="text-sm text-slate-500 mb-6 text-center">
           서비스 이용을 위해 추가 정보를 입력해주세요.
         </p>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleNext} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">이름</label>
             <input
@@ -180,7 +329,7 @@ export default function KakaoCompletePage() {
               </div>
             )}
             {form.school && (
-              <p className="text-xs text-green-600 mt-1">✓ {form.school}</p>
+              <p className="text-xs text-green-600 mt-1">{form.school}</p>
             )}
             {showSchoolDropdown && (
               <ul className="absolute z-50 w-full bottom-full mb-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
@@ -237,7 +386,7 @@ export default function KakaoCompletePage() {
           {errors.form && <p className="text-sm text-red-500 text-center">{errors.form}</p>}
 
           <Button variant="primary" fullWidth loading={isLoading} type="submit">
-            완료
+            {form.role === 'STUDENT' && form.birthDate && isUnder14(form.birthDate) ? '다음' : '완료'}
           </Button>
         </form>
       </div>
